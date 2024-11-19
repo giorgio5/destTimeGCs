@@ -1,5 +1,5 @@
 set terminal png
-set output 'multi_graph.png'
+set output 'multi_graph_NGC_6397.png'
 set logscale y
 set style data linespoints
 set title "Time of destabilization in the NGC 6397 GC vs distance from center"
