@@ -7,7 +7,9 @@
       real*8  focusg,d_core,time,time_yr,s,s_quad
       real*8  focusg_r,d_r,s_quad_r,time_r,time_yr_r 
       real*8  r,v,r_cm,v_cm
-     
+      
+      real*8 time_destf, time_dest_ns
+c234567      
       
       character*8 namecluster
       character*22  namefile
@@ -119,17 +121,24 @@ c changes with the mass of the star test
       
 c calculus of time of destabilization for core radius
       
-      s_quad    = m_tot * ggg/(6 * r_core)
-      s  = sqrt(s_quad)
-      d_core = 3*m_tot_sm/(8 * m_mean_sm * pi * r_core**3)
-      focusg  = (dest**2 + (ggg * m_test *dest)/s_quad)
-      time = 1/(4*sqrt(pi)*s*d_core*focusg) 
+      time = time_destf(dest,m_tot_sm,r_core,m_mean_sm,m_test)
       time_yr = time/yr 
+      
       write(i_u,*) "#"
       write(i_u,*) "# for core radius calculus of time in year"
       write(i_u,*) "#"
       write(i_u,*) "#", time_yr
       write(i_u,*) "#"
+      
+      time = time_dest_ns(dest,m_tot,r_core,m_mean_sm,m_test)
+      time_yr = time/yr 
+      
+      write(i_u,*) "#"
+      write(i_u,*) "# for core radius calculus of time due to 100 ns"
+      write(i_u,*) "#"
+      write(i_u,*) "#", time_yr
+      write(i_u,*) "#"
+      
       write(i_u,*) "#  for generic radii"
       write(i_u,*) "#  radius(pc) time (year)"
       
@@ -200,7 +209,56 @@ c and so on for the error bands
       end program dest_time_gcs
 
 
-       
+c=====================================================================
+c functions and subroutines
+
+c calculus of time of destabilization for core radius
+c234567      
+      real*8 function time_destf(df,m_totsm_f,r_cor_f,mean_mfsm,mtestf)
+      implicit none
+      real*8  km,sm,ggg,au,yr,pi
+      common /a/ km,sm,ggg,au,yr,pi
+      
+      real*8 df,m_totsm_f,r_cor_f,mean_mfsm,mtestf
+      real*8 v_quad_f, v_mean_f, d_core_f, focusg_f, m_tot_f
+      
+      m_tot_f = m_totsm_f*sm
+      v_quad_f    = m_tot_f * ggg/(6 * r_cor_f)
+      v_mean_f  = sqrt(v_quad_f)
+      d_core_f = 3*m_totsm_f/(8*mean_mfsm*pi*r_cor_f**3)
+      focusg_f  = (df**2 + (ggg * mtestf *df)/v_quad_f)
+      time_destf = 1/(4*sqrt(pi)*v_mean_f*d_core_f*focusg_f) 
+      return
+      end 
+
+
+c this function yelds the time of destabilization for a star mass
+c with mass = m_test due to about 100 neutron stars of mass m = 1.4 sm
+c in the core of the cluster: ref Hills&Day(1976)
+c234567
+      real*8 function time_dest_ns(df,m_tot_f,r_cor_f,mean_mfsm,mtestf)
+      implicit none
+      real*8  km,sm,ggg,au,yr,pi
+      common /a/ km,sm,ggg,au,yr,pi
+      
+      real*8 df,m_tot_f,r_cor_f,mean_mfsm,mtestf
+      real*8 v_quad_f,v_mean_f,v_mean_ns,d_core_ns
+      real*8 crossec0, l, v_inf_quad, gamma, vol
+     
+      v_quad_f  = m_tot_f * ggg/(6 * r_cor_f)
+      v_mean_f  = sqrt(v_quad_f)
+      vol = (4/3)*pi*(r_cor_f**3)
+      d_core_ns = 100/vol
+      l = (sqrt(1.4/(2*(mean_mfsm + 1.4))))/v_mean_f
+      v_inf_quad = 2*ggg*(mtestf + 1.4*sm)/df**2
+      crossec0 = pi*(df**2)
+      gamma = 2*l*crossec0*(1/(l**2) + v_inf_quad)/sqrt(pi)
+      time_dest_ns = 1/(d_core_ns*gamma)
+      return
+      end 
+      
+c234567
+      
 
 
 

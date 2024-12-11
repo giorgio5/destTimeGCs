@@ -6,6 +6,11 @@
  #
  #   3091488354381.1411     
  #
+ #
+ # for core radius calculus of time due to 100 ns
+ #
+ #   1.2477629730788874E+017
+ #
  #  for generic radii
  #  radius(pc) time (year)
   0.12         2668923528.54
