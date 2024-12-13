@@ -2,13 +2,13 @@
       implicit none
       
       real*8  km,sm,ggg,au,yr,pi,pc,dist_sun
-      real*8  m_tot,m_test,m_test_sm,m_tot_sm,m_mean_sm,m_mean,m_r
+      real*8  m_tot,m_test,m_test_sm,m_tot_sm,m_mean_sm,m_mean
       real*8  r_core,orb_r,r_core_pc,orb_r_au,dest
-      real*8  focusg,d_core,time,time_yr,s,s_quad
-      real*8  focusg_r,d_r,s_quad_r,time_r,time_yr_r 
-      real*8  r,v,r_cm,v_cm
+      real*8  time,time_yr,r,v,time_r,time_yr_r,r_cm 
       
-      real*8 time_destf, time_dest_ns
+   
+c     declaration of function names      
+      real*8 time_destf, time_dest_ns, time_dest_r, rto_cm
 c234567      
       
       character*8 namecluster
@@ -169,14 +169,9 @@ c and so on for the error bands
       
       if(r == 0 .or. v == 0 ) go to 44
       
-      v_cm = km*v
-      r_cm = r*dist_sun*1000*pc/206265 
-      m_r = (r_cm)*6*(v_cm**2)/ggg
-   
-      s_quad_r = v_cm**2
-      d_r = 3*m_r/(8*m_mean*pi*r_cm**3)
-      focusg_r  = (dest**2 + (ggg*m_test*dest)/s_quad_r)
-      time_r = 1/(4*sqrt(pi)*v_cm*d_r*focusg_r) 
+      r_cm = rto_cm(r)
+      time_r = time_dest_r(dest,r_cm,v,m_test,m_mean)
+      
       time_yr_r = time_r/yr 
       
       write(unit=i_u,fmt =4) r_cm/pc,'    ', time_yr_r 
@@ -258,7 +253,34 @@ c234567
       end 
       
 c234567
+c function for conversion from '' to cm
+      real*8 function rto_cm (rf)
+      implicit none
+      real*8 rf,pc,dist_sun
+      common /b/ pc,dist_sun
+      rto_cm = rf*dist_sun*1000*pc/206265 ! conversion from '' to cm
+      return
+      end 
       
-
+      
+c calculus of time of destabilization for generic radius
+      real*8 function time_dest_r(destf,r_cmf,vf,m_testf,m_meanf)
+      implicit none
+      real*8  km,sm,ggg,au,yr,pi
+      common /a/ km,sm,ggg,au,yr,pi
+      
+      real*8 destf,r_cmf,vf,m_testf,m_meanf
+      real*8 v_cm,m_r,d_r,v_quad_r,focusg_r
+      
+      v_cm = km*vf !conversion in cm/s
+      
+      m_r = (r_cmf)*6*(v_cm**2)/ggg
+   
+      v_quad_r = v_cm**2
+      d_r = 3*m_r/(8*m_meanf*pi*r_cmf**3) !density at r
+      focusg_r  = (destf**2 + (ggg*m_testf*destf)/v_quad_r)
+      time_dest_r = 1/(4*sqrt(pi)*v_cm*d_r*focusg_r) 
+      return
+      end 
 
 
