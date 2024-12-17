@@ -5,6 +5,7 @@
       real*8  m_tot,m_test,m_test_sm,m_tot_sm,m_mean_sm,m_mean
       real*8  r_core,orb_r,r_core_pc,orb_r_au,dest
       real*8  time,time_yr,r,v,time_r,time_yr_r,r_cm 
+      real*8  res_time_core, res_time_ns, res_time_bh
       
    
 c     declaration of function names      
@@ -18,11 +19,13 @@ c234567
       
       character*12 buffer12
       character*4  buffer4
+      character*35 fmt5 
   
       common /a/ km,sm,ggg,au,yr,pi
       common /b/ pc,dist_sun
       
       integer i_m, i_u, k0, k1, k2, i_clu, i_u_r ,i_u_v, i_clu_max
+      integer n_file_res
       
       dimension m_test_sm(7)
            data m_test_sm/0.1,0.2,0.3,0.4,0.5,0.6,0.7/
@@ -40,30 +43,43 @@ c                         1   2   3   4   5   6   7
   1     format (a8,a12,f6.2,a12,f4.2,a12,f3.2,a12,f4.2) 
   2     format (f6.2,a4,f4.2) 
   3     format (f6.2)     
-  4     format (f6.2,a4,f18.2)      
+  4     format (f6.2,a4,f18.2)  
+  
   
 c     read from file name cluster and other parametrers proper of the 
 c     cluster itself
-
-      i_clu_max = 2 !the total number of clusters in unit 0
+      
+      n_file_res = 1
+      i_clu_max = 2
+      !the total number of clusters in unit 0 plus 1
       
       open(unit=0, file='Dati_GCs.dat', action='read', status='old', 
      & iostat= k0)
      
-
+c     in this file put the resulting time calculated in years for core radius
+c     ns and bh for every cluster in format 5 (see the connection with 
+c     using a format Fortra 77 with gnuplot library)
+      
+      open(unit=1,file='resultsGCs.ris',action='write',status='replace')
+      write(1,*)"#result of dest_time(yr) in core,m_test(sm), NS and BH"
+      write(1,*)"#"
+      
       if (k0 .ne. 0) then 
       write (*,*) 'Dati_GCs.dat cannot be opened'
       end if
       
-      i_clu = 0
+      i_clu = 0 
+       
       
       read(0,*) ! skip the first line
       read(0,*) ! skip the second line
       
 c234567     
   55  continue ! until loop
-        
+       
       i_clu = i_clu +1 
+      write(1,*)"#"
+      
       read(0, fmt=1) namecluster,buffer12,m_tot_sm,buffer12,
      & r_core_pc,buffer12,m_mean_sm,buffer12,dist_sun
      
@@ -80,17 +96,13 @@ c234567
       m_tot    = m_tot_sm * sm
       m_mean   = m_mean_sm * sm
       
-      namefile_r = namecluster//'_r.dat'
-      namefile_v = namecluster//'_v.dat'
       
-      i_u_r = i_clu 
-      i_u_v = i_clu + 2
       
       do 13 i_m = 1,7 
       write(*,*)
       write(*,*) "for i_m =", i_m
       write(*,*)
-      i_u = i_clu_max*2 + (i_clu - 1)*7 + i_m 
+      i_u = 2 + i_clu_max*2 + (i_clu -1)*7 + i_m 
       string1= char(i_m + 48)
       
 c    because in ascii table numbers start from 48 
@@ -123,6 +135,7 @@ c calculus of time of destabilization for core radius
       
       time = time_destf(dest,m_tot_sm,r_core,m_mean_sm,m_test)
       time_yr = time/yr 
+      res_time_core = time_yr
       
       write(i_u,*) "#"
       write(i_u,*) "# for core radius calculus of time in year"
@@ -132,6 +145,7 @@ c calculus of time of destabilization for core radius
       
       time = time_dest_ns(dest,m_tot,r_core,m_mean_sm,m_test)
       time_yr = time/yr 
+      res_time_ns = time_yr
       
       write(i_u,*) "#"
       write(i_u,*) "# for core radius calculus of time due to 100 ns"
@@ -139,8 +153,18 @@ c calculus of time of destabilization for core radius
       write(i_u,*) "#", time_yr
       write(i_u,*) "#"
       
+      fmt5 = "(a8,a12,f4.2,a4,es9.2e2,a4,es9.2e2)"  
+      buffer12 = "            "
+      buffer4 = "    " 
+      write(1,fmt =fmt5) namecluster,buffer12,m_test_sm(i_m),buffer4,
+     & res_time_core,buffer4,res_time_ns
+     
+     
       write(i_u,*) "#  for generic radii"
       write(i_u,*) "#  radius(pc) time (year)"
+      
+
+      
       
 c calculus of the time of destabilization of an orbital planet traiectory
 c from the data presents on the online database 
@@ -151,8 +175,8 @@ c and so on for the error bands
       
       namefile_r = namecluster//'_r.dat'
       namefile_v = namecluster//'_v.dat'
-      i_u_r = i_clu 
-      i_u_v = i_clu + i_clu_max
+      i_u_r = i_clu + n_file_res
+      i_u_v = i_u_r + 1
 
       open(unit=i_u_r, file=namefile_r, action='read', status='old')
       open(unit=i_u_v, file=namefile_v, action='read', status='old')
@@ -195,9 +219,11 @@ c and so on for the error bands
       
       
       if((k0 .eq. 0) .and. (i_clu .lt. i_clu_max)) then 
+      
       go to 55
       else 
       close(0)
+      close(1)
       endif
       
       
