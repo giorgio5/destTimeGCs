@@ -1,4 +1,5 @@
- #result of dest_time(yr) in core,m_test(sm), NS and BH
+ #result of dest_time(yr) for core and NS
+ # m_test(sm), dets_time_core, dest_time_NS
  #
  #
 NGC_6397            0.10     4.45E+12     2.58E+17

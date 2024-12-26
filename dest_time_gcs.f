@@ -2,14 +2,19 @@
       implicit none
       
       real*8  km,sm,ggg,au,yr,pi,pc,dist_sun
-      real*8  m_tot,m_test,m_test_sm,m_tot_sm,m_mean_sm,m_mean
+      real*8  m_tot,m_test,m_test_sm,m_tot_sm,m_mean_sm,m_mean,m_bh_sm
       real*8  r_core,orb_r,r_core_pc,orb_r_au,dest
       real*8  time,time_yr,r,v,time_r,time_yr_r,r_cm 
       real*8  res_time_core, res_time_ns, res_time_bh
       
-   
+      dimension m_bh_sm(6)
+           data m_bh_sm/500.,1000.,1500.,2000.,2500.,5000./
+c                         1   2     3     4     5     6   
+      dimension res_time_bh(6)
+           data res_time_bh/0.,0.,0.,0.,0.,0./
+c                           1  2  3  4  5  6   
 c     declaration of function names      
-      real*8 time_destf, time_dest_ns, time_dest_r, rto_cm
+      real*8 time_destf,time_dest_ns,time_dest_bh,time_dest_r,rto_cm
 c234567      
       
       character*8 namecluster
@@ -20,16 +25,18 @@ c234567
       character*12 buffer12
       character*4  buffer4
       character*35 fmt5 
+      character*81 fmt6
   
       common /a/ km,sm,ggg,au,yr,pi
       common /b/ pc,dist_sun
       
-      integer i_m, i_u, k0, k1, k2, i_clu, i_u_r ,i_u_v, i_clu_max
-      integer n_file_res
+      integer i_m, i_u, k0, k1, k2, i_clu, i_u_r ,i_u_v,i_clu_max,i_bh
+      
       
       dimension m_test_sm(7)
            data m_test_sm/0.1,0.2,0.3,0.4,0.5,0.6,0.7/
 c                         1   2   3   4   5   6   7
+      
       
        km = 1.d5     ! km in  cm
        sm  = 1.99d33 ! solarmass in gr
@@ -49,20 +56,31 @@ c                         1   2   3   4   5   6   7
 c     read from file name cluster and other parametrers proper of the 
 c     cluster itself
       
-      n_file_res = 1
+      
       i_clu_max = 2
       !the total number of clusters in unit 0 plus 1
       
       open(unit=0, file='Dati_GCs.dat', action='read', status='old', 
      & iostat= k0)
      
-c     in this file put the resulting time calculated in years for core radius
+c     in this file 1 put the resulting time calculated in years for core radius
 c     ns and bh for every cluster in format 5 (see the connection with 
-c     using a format Fortra 77 with gnuplot library)
+c     using a format Fortran 77 with gnuplot library)
       
       open(unit=1,file='resultsGCs.ris',action='write',status='replace')
-      write(1,*)"#result of dest_time(yr) in core,m_test(sm), NS and BH"
+      write(1,*)"#result of dest_time(yr) for core and NS"
+      write(1,*)"# m_test(sm), dets_time_core, dest_time_NS"
       write(1,*)"#"
+      
+c     in this file 2 put the resulting time calculated in years for core radius
+c     ns and bh for every cluster in format 6 (see the connection with 
+c     using a format Fortran 77 with gnuplot library)
+
+      open(unit=2,file='resultsGCs_bh.ris',action='write',
+     & status='replace')
+      write(2,*)"#dest_time(yr) for bh in centre,m_test(sm),m_bh =500,\&
+     & 1000, 1500, 2000, 2500, 5000 sm"
+      write(2,*)"#"
       
       if (k0 .ne. 0) then 
       write (*,*) 'Dati_GCs.dat cannot be opened'
@@ -102,7 +120,7 @@ c234567
       write(*,*)
       write(*,*) "for i_m =", i_m
       write(*,*)
-      i_u = 2 + i_clu_max*2 + (i_clu -1)*7 + i_m 
+      i_u = 3 + i_clu_max*2 + (i_clu -1)*7 + i_m 
       string1= char(i_m + 48)
       
 c    because in ascii table numbers start from 48 
@@ -159,6 +177,21 @@ c calculus of time of destabilization for core radius
       write(1,fmt =fmt5) namecluster,buffer12,m_test_sm(i_m),buffer4,
      & res_time_core,buffer4,res_time_ns
      
+      fmt6 =  "(a8,a12,f4.2,a4,es9.2e2,a4,es9.2e2,a4,es9.2e2,a4,es9.2e2,
+     +a4,es9.2e2,a4,es9.2e2)"  
+c             1234567890123456789012345678901234567890123456789012345678
+c     90123456789012345678901
+      
+      do i_bh =1,6
+      res_time_bh(i_bh)=time_dest_bh(m_tot,r_core,m_bh_sm(i_bh),
+     & m_test_sm(i_m))/yr
+      end do
+      
+      
+      write(2,fmt =fmt6) namecluster,buffer12,m_test_sm(i_m),buffer4,
+     +res_time_bh(1),buffer4,res_time_bh(2),buffer4,res_time_bh(3),
+     +buffer4,res_time_bh(4),buffer4,res_time_bh(5),buffer4,
+     +res_time_bh(6)
      
       write(i_u,*) "#  for generic radii"
       write(i_u,*) "#  radius(pc) time (year)"
@@ -175,8 +208,8 @@ c and so on for the error bands
       
       namefile_r = namecluster//'_r.dat'
       namefile_v = namecluster//'_v.dat'
-      i_u_r = i_clu + n_file_res
-      i_u_v = i_u_r + 1
+      i_u_r = 2*i_clu + 1
+      i_u_v = 2*i_clu + 2
 
       open(unit=i_u_r, file=namefile_r, action='read', status='old')
       open(unit=i_u_v, file=namefile_v, action='read', status='old')
@@ -224,6 +257,7 @@ c and so on for the error bands
       else 
       close(0)
       close(1)
+      close(2)
       endif
       
       
@@ -310,3 +344,34 @@ c calculus of time of destabilization for generic radius
       end 
 
 
+c these function and subroutine yeld the time of destabilization for a star mass
+c with mass = m_test due to a IMBH at the centre of cluster
+c of mass m_bh = 500, 1000, 1500, 2000, 2500, 5000 sm
+c in the core of the cluster: ref Hills&Day(1976),  Peebles(1972)
+c for r_inf 
+
+      real*8 function time_dest_bh(m_tot_f,r_cor_f,m_bh_smf,m_test_smf)
+      implicit none
+      real*8  km,sm,ggg,au,yr,pi
+      common /a/ km,sm,ggg,au,yr,pi
+      
+      
+      real*8 m_tot_f,r_cor_f,m_bh_smf,m_test_smf
+      real*8 v_quad_f,v_mean_f,d_core_bh,r_inf
+      real*8 crossec0,l,v_inf_quad,gamma,vol
+     
+      v_quad_f  = m_tot_f*ggg/(6 * r_cor_f)
+      r_inf =  m_bh_smf*sm*ggg/v_quad_f
+      v_mean_f  = sqrt(v_quad_f)
+      vol = (4/3)*pi*(r_cor_f**3)
+      d_core_bh = 1/vol
+      l = (sqrt(1.4/(2*sm*(m_test_smf + m_bh_smf))))/v_mean_f
+      v_inf_quad = 2*ggg*sm*(m_test_smf + m_bh_smf)/r_inf**2
+      crossec0 = pi*(r_inf**2)
+      gamma = 2*l*crossec0*(1/(l**2) + v_inf_quad)/sqrt(pi)
+      time_dest_bh = 1/(d_core_bh*gamma)
+      return
+      end 
+
+
+      
