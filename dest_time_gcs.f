@@ -78,8 +78,8 @@ c     using a format Fortran 77 with gnuplot library)
 
       open(unit=2,file='resultsGCs_bh.ris',action='write',
      & status='replace')
-      write(2,*)"#dest_time(yr) for bh in centre,m_test(sm),m_bh =500,\&
-     & 1000, 1500, 2000, 2500, 5000 sm"
+      write(2,*)"# dest_time(yr) for bh in centre"
+      write(2,*)"#m_test(sm),m_bh =500,1000, 1500, 2000, 2500, 5000 sm"
       write(2,*)"#"
       
       if (k0 .ne. 0) then 
@@ -96,7 +96,9 @@ c234567
   55  continue ! until loop
        
       i_clu = i_clu +1 
-      write(1,*)"#"
+      
+      write(1,*) "#"
+      write(2,*) "#"
       
       read(0, fmt=1) namecluster,buffer12,m_tot_sm,buffer12,
      & r_core_pc,buffer12,m_mean_sm,buffer12,dist_sun
