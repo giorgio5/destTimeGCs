@@ -1,4 +1,6 @@
 name_cluster       totalMass     halfMass_radius    massMean      dist_from_Sun
-                          (solarMass)       (pc)        (solarMass)    (kpc)
+                    (solarMass)       (pc)        (solarMass)       (kpc)
 NGC_6397            8.24d4            3.16            0.4            2.48
-NGC_7078            5.18d5            3.66            0.6            10.7          
+NGC_7078            5.18d5            3.66            0.6            10.7
+NGC_0104            8.53d5            6.44            0.7            4.52
+NGC_0288            9.60d4            8.56            0.5            8.99

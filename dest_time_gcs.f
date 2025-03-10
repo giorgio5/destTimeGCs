@@ -57,7 +57,7 @@ c     read from file name cluster and other parametrers proper of the
 c     cluster itself
       
       
-      i_clu_max = 2
+      i_clu_max = 4
       !the total number of clusters in unit 0 plus 1
       
       open(unit=0, file='Dati_GCs.dat', action='read', status='old', 
